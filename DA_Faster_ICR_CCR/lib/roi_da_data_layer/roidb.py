@@ -33,6 +33,7 @@ def prepare_roidb(imdb):
             not (imdb.name.startswith("coco"))
             or "car" in imdb.name
             or "sim10k" in imdb.name
+            or "coco" in imdb.name
         ):
             roidb[i]["width"] = sizes[i][0]
             roidb[i]["height"] = sizes[i][1]
