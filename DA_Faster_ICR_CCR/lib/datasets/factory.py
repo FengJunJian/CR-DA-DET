@@ -19,7 +19,7 @@ from datasets.pascal_voc_water import pascal_voc_water
 from datasets.sim10k_coco import sim10k
 from datasets.vg import vg
 from datasets.water import water
-
+from datasets.SS_SMD_coco import ss_smd
 __sets = {}
 
 
@@ -115,7 +115,8 @@ for split in ["train", "val", "val1", "val2", "test"]:
         split, devkit_path, data_path
     )
 
-
+__sets[name] = lambda split=split, year=year: ss_smd(split, year)
+__sets[name] = lambda split=split, year=year: ss_smd(split, year)
 def get_imdb(name):
     """Get an imdb (image database) by name."""
     if name not in __sets:

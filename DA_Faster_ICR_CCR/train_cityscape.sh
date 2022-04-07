@@ -5,3 +5,6 @@ net="vgg16"
 pretrained_path="/data/pretrained_model/vgg16_caffe.pth"
 
 python da_train_net.py --cuda --dataset ${dataset} --net ${net} --save_dir ${save_dir} --pretrained_path ${pretrained_path}  --max_epochs 12
+
+
+rem --cuda --dataset cityscape --net res50 --save_dir model --pretrained_path res50_caffe.pth  --max_epochs 12

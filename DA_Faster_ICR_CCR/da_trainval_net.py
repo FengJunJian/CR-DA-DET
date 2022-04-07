@@ -33,7 +33,7 @@ from roi_da_data_layer.roibatchLoader import roibatchLoader
 from roi_da_data_layer.roidb import combined_roidb
 from torch.autograd import Variable
 from torch.utils.data.sampler import Sampler
-
+# from torchvision.models import resnet50
 
 
 def infinite_data_loader(data_loader):
@@ -232,6 +232,21 @@ if __name__ == "__main__":
             "[0.5,1,2]",
             "MAX_NUM_GT_BOXES",
             "50",
+        ]
+    elif args.dataset =="ship_voc":
+        print("loading our dataset...........")
+
+        args.s_imdb_name = "ship_train_SeaShips_cocostyle"
+        args.t_imdb_name = "ship_train_SMD_cocostyle"
+        args.s_imdbtest_name = "ship_test_SeaShips_cocostyle"
+        args.t_imdbtest_name = "ship_test_SMD_cocostyle"
+        args.set_cfgs = [
+            "ANCHOR_SCALES",
+            "[4,8,16,32]",
+            "ANCHOR_RATIOS",
+            "[0.5,1,2]",
+            "MAX_NUM_GT_BOXES",
+            "30",
         ]
     elif args.dataset == "cityscape":
         print("loading our dataset...........")
