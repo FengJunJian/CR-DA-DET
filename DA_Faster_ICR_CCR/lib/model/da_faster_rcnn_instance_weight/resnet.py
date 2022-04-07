@@ -9,7 +9,7 @@ import torch.utils.model_zoo as model_zoo
 from model.da_faster_rcnn_instance_weight.faster_rcnn import _fasterRCNN
 from model.utils.config import cfg
 from torch.autograd import Variable
-
+from torchvision import models
 __all__ = ["ResNet", "resnet18", "resnet34", "resnet50", "resnet101", "resnet152"]
 
 
@@ -227,9 +227,12 @@ def resnet152(pretrained=False):
 
 
 class resnet(_fasterRCNN):
-    def __init__(self, classes, num_layers=101, pretrained=False, class_agnostic=False):
+    def __init__(self, classes, num_layers=101, pretrained=False, class_agnostic=False,pretrained_path=None):
         # self.model_path = "/data/ztc/detectionModel/resnet101_caffe.pth"
-        self.model_path = "/data/pretrained_model/resnet101_caffe.pth"
+        if num_layers in [18,34,50,101,152]:
+            self.resnet = getattr(models,'resnet%d'%(num_layers))#models.resnet101(self.pretrained)
+        self.model_path = pretrained_path if pretrained_path else "/data/pretrained_model/resnet101_caffe.pth"
+
         self.dout_base_model = 1024
         self.pretrained = pretrained
         self.class_agnostic = class_agnostic
@@ -237,27 +240,29 @@ class resnet(_fasterRCNN):
         _fasterRCNN.__init__(self, classes, class_agnostic, 2048)
 
     def _init_modules(self):
-        resnet = resnet101()
+        #resnet = resnet101(self.pretrained)
+        #resnet=models.resnet101(self.pretrained)
+        #resnet=self.resnet
 
-        if self.pretrained == True:
-            print("Loading pretrained weights from %s" % (self.model_path))
-            state_dict = torch.load(self.model_path)
-            resnet.load_state_dict(
-                {k: v for k, v in state_dict.items() if k in resnet.state_dict()}
-            )
+        # if self.pretrained == True:
+        #     print("Loading pretrained weights from %s" % (self.model_path))
+        #     state_dict = torch.load(self.model_path)
+        #     resnet.load_state_dict(
+        #         {k: v for k, v in state_dict.items() if k in resnet.state_dict()}
+        #     )
 
         # Build resnet.
         self.RCNN_base = nn.Sequential(
-            resnet.conv1,
-            resnet.bn1,
-            resnet.relu,
-            resnet.maxpool,
-            resnet.layer1,
-            resnet.layer2,
-            resnet.layer3,
+            self.resnet.conv1,
+            self.resnet.bn1,
+            self.resnet.relu,
+            self.resnet.maxpool,
+            self.resnet.layer1,
+            self.resnet.layer2,
+            self.resnet.layer3,
         )
 
-        self.RCNN_top = nn.Sequential(resnet.layer4)
+        self.RCNN_top = nn.Sequential(self.resnet.layer4)
 
         self.RCNN_cls_score = nn.Linear(2048, self.n_classes)
         if self.class_agnostic:
