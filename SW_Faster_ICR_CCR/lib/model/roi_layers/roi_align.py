@@ -1,6 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import torch
-from model import _C
+#from model import _C
+from torchvision import ops
 from torch import nn
 from torch.autograd import Function
 from torch.autograd.function import once_differentiable
@@ -43,8 +44,8 @@ class _ROIAlign(Function):
         return grad_input, None, None, None, None
 
 
-roi_align = _ROIAlign.apply
-
+#roi_align = _ROIAlign.apply
+roi_align = ops.roi_align#_ROIAlign.apply
 
 class ROIAlign(nn.Module):
     def __init__(self, output_size, spatial_scale, sampling_ratio):

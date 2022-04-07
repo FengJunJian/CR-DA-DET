@@ -1,6 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
 import torch
-from model import _C
+# from model import _C
+from torchvision import ops
 from torch import nn
 from torch.autograd import Function
 from torch.autograd.function import once_differentiable
@@ -42,8 +43,8 @@ class _ROIPool(Function):
         return grad_input, None, None, None
 
 
-roi_pool = _ROIPool.apply
-
+# roi_pool = _ROIPool.apply
+roi_pool=ops.roi_pool
 
 class ROIPool(nn.Module):
     def __init__(self, output_size, spatial_scale):
