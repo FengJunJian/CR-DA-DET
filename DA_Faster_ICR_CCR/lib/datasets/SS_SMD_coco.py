@@ -32,7 +32,7 @@ class ss_smd(imdb):
         # name, paths
         self._year = year
         self._image_set = image_set
-        self._data_path = osp.join(cfg.DATA_DIR, "ss_smd")
+        self._data_path = cfg.DATA_DIR#osp.join(cfg.DATA_DIR, "ss_smd")
         # load COCO API, classes, class <-> id mappings
         self._COCO = COCO(self._get_ann_file())
         cats = self._COCO.loadCats(self._COCO.getCatIds())
@@ -73,11 +73,10 @@ class ss_smd(imdb):
         self._gt_splits = ("train", "val", "minival")
 
     def _get_ann_file(self):
-        prefix = "instances" if self._image_set.find("test") == -1 else "image_info"
+        #prefix = ''#"instances" if self._image_set.find("test") == -1 else "image_info"
         return osp.join(
             self._data_path,
-            "annotations",
-            prefix + "_" + self._image_set + self._year + ".json",
+            self._image_set + ".json",
         )
 
     def _load_image_set_index(self):
@@ -110,9 +109,11 @@ class ss_smd(imdb):
     """
         # Example image path for index=119993:
         #   images/train2014/COCO_train2014_000000119993.jpg
-        file_name = "target_" + str(index) + ".jpg"
+        #file_name = "target_" + str(index) + ".jpg"
+        file_name=self._COCO.loadImgs(index)[0]['file_name']
         # image_path = osp.join(self._data_path, "images", self._data_name, file_name)
-        image_path = osp.join(self._data_path, self._data_name, file_name)
+        #image_path = osp.join(self._data_path, self._data_name, file_name)
+        image_path = osp.join(self._data_path, "JPEGImages", file_name)
         assert osp.exists(image_path), "Path does not exist: {}".format(image_path)
         return image_path
 
@@ -353,7 +354,7 @@ class ss_smd(imdb):
 
 
 if __name__ == "__main__":
-    db = cityscapes_car("train", "2019")
+    db = ss_smd("train", "2019")
     print(db.image_id_at(17))
     print(db.image_path_at(17))
     print(len(db.roidb))
