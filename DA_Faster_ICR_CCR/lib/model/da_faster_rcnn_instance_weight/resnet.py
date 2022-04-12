@@ -230,7 +230,11 @@ class resnet(_fasterRCNN):
     def __init__(self, classes, num_layers=101, pretrained=False, class_agnostic=False,pretrained_path=None):
         # self.model_path = "/data/ztc/detectionModel/resnet101_caffe.pth"
         if num_layers in [18,34,50,101,152]:
-            self.resnet = getattr(models,'resnet%d'%(num_layers))#models.resnet101(self.pretrained)
+            self.arcF=getattr(models,"resnet%d" % (num_layers))
+            #arcF.__init__()
+            # self.resnet
+
+            # self.resnet=models.resnet18(True)
         self.model_path = pretrained_path if pretrained_path else "/data/pretrained_model/resnet101_caffe.pth"
 
         self.dout_base_model = 1024
@@ -240,6 +244,7 @@ class resnet(_fasterRCNN):
         _fasterRCNN.__init__(self, classes, class_agnostic, 2048)
 
     def _init_modules(self):
+        self.resnet=self.arcF(True)
         #resnet = resnet101(self.pretrained)
         #resnet=models.resnet101(self.pretrained)
         #resnet=self.resnet
