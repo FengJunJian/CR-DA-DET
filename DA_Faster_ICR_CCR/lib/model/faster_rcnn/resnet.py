@@ -9,6 +9,7 @@ import torch.utils.model_zoo as model_zoo
 from model.faster_rcnn.faster_rcnn import _fasterRCNN
 from model.utils.config import cfg
 from torch.autograd import Variable
+from torchvision import models
 
 __all__ = ["ResNet", "resnet18", "resnet34", "resnet50", "resnet101", "resnet152"]
 
@@ -231,11 +232,14 @@ class resnet(_fasterRCNN):
         self.dout_base_model = 1024
         self.pretrained = pretrained
         self.class_agnostic = class_agnostic
-
+        self.num_layers=num_layers
         _fasterRCNN.__init__(self, classes, class_agnostic)
 
     def _init_modules(self):
-        resnet = resnet101()
+        self.resnet=getattr(models,"resnet{}".format(self.num_layers))
+        resnet = self.resnet(self.pretrained)
+        #models.resnet
+        #resnet = resnet101()
 
         if self.pretrained == True:
             print("Loading pretrained weights from %s" % (self.model_path))

@@ -9,7 +9,7 @@ import torch.utils.model_zoo as model_zoo
 from model.da_faster_rcnn_instance_da_weight.faster_rcnn import _fasterRCNN
 from model.utils.config import cfg
 from torch.autograd import Variable
-
+from torchvision import models
 __all__ = ["ResNet", "resnet18", "resnet34", "resnet50", "resnet101", "resnet152"]
 
 
@@ -334,17 +334,19 @@ class resnet(_fasterRCNN):
         self.lc = lc
         self.gc = gc
         self.da_use_contex = da_use_contex
-        self.layers = num_layers
-        if not pretrained_path:
-            self.model_path = pretrained_path
+        self.num_layers = num_layers
+        # if not pretrained_path:
+        #     self.model_path = pretrained_path
         _fasterRCNN.__init__(self, classes, class_agnostic, lc, gc, da_use_contex, 2048)
 
     def _init_modules(self):
-
-        resnet = resnet101()
-        if self.layers == 50:
-            resnet = resnet50()
-        if self.pretrained == True:
+        self.resnet = getattr(models, "resnet{}".format(self.num_layers))
+        # models.resnet50()
+        resnet = self.resnet(self.pretrained)
+        # resnet = resnet101()
+        # if self.layers == 50:
+        #     resnet = resnet50()
+        if self.model_path:
             print("Loading pretrained weights from %s" % (self.model_path))
             state_dict = torch.load(self.model_path)
             resnet.load_state_dict(
@@ -393,6 +395,7 @@ class resnet(_fasterRCNN):
         self.RCNN_base1.apply(set_bn_fix)
         self.RCNN_base2.apply(set_bn_fix)
         self.RCNN_top.apply(set_bn_fix)
+        del resnet
 
     def train(self, mode=True):
         # Override train so that the training mode is set as we want
@@ -414,4 +417,5 @@ class resnet(_fasterRCNN):
 
     def _head_to_tail(self, pool5):
         fc7 = self.RCNN_top(pool5).mean(3).mean(2)
+        #fc7 = self.RCNN_top(pool5).mean([2,3])
         return fc7
