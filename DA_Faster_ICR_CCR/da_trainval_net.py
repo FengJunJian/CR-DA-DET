@@ -11,7 +11,7 @@ import pdb
 import pprint
 import sys
 import time
-
+from torchvision import models
 import _init_paths
 import numpy as np
 import torch
@@ -83,7 +83,7 @@ def parse_args():
         "--nw",
         dest="num_workers",
         help="number of worker to load data",
-        default=0,
+        default=2,
         type=int,
     )
     parser.add_argument(
@@ -217,7 +217,12 @@ class sampler(Sampler):
 if __name__ == "__main__":
 
     args = parse_args()
+    #__C.ROOT_DIR = osp.abspath(osp.join(osp.dirname(__file__), "..", "..", ".."))
 
+    # Data directory
+    #__C.DATA_DIR = osp.abspath(osp.join(__C.ROOT_DIR, "data"))
+    print(cfg.ROOT_DIR)
+    print(cfg.DATA_DIR)
     print("Called with args:")
     print(args)
 
@@ -233,7 +238,7 @@ if __name__ == "__main__":
             "MAX_NUM_GT_BOXES",
             "50",
         ]
-    elif args.dataset =="ship_voc":
+    elif args.dataset =="ship_coco":
         print("loading our dataset...........")
 
         args.s_imdb_name = "ship_train_SeaShips_cocostyle"
@@ -516,6 +521,10 @@ if __name__ == "__main__":
         fasterRCNN = resnet(
             s_imdb.classes, 152, pretrained=True, class_agnostic=args.class_agnostic
         )
+    elif args.net == "res18":
+        fasterRCNN = resnet(
+            s_imdb.classes, 18, pretrained=True, class_agnostic=args.class_agnostic
+        )
     else:
         print("network is not defined")
         pdb.set_trace()
@@ -598,22 +607,22 @@ if __name__ == "__main__":
             except:
                 data_iter_t = iter(t_dataloader)
                 tgt_data = next(data_iter_t)
+            with torch.no_grad():
+                im_data.resize_(data[0].size()).copy_(data[0])  # change holder size
+                im_info.resize_(data[1].size()).copy_(data[1])
+                im_cls_lb.resize_(data[2].size()).copy_(data[2])
+                gt_boxes.resize_(data[3].size()).copy_(data[3])
+                num_boxes.resize_(data[4].size()).copy_(data[4])
+                need_backprop.resize_(data[5].size()).copy_(data[5])
 
-            im_data.data.resize_(data[0].size()).copy_(data[0])  # change holder size
-            im_info.data.resize_(data[1].size()).copy_(data[1])
-            im_cls_lb.data.resize_(data[2].size()).copy_(data[2])
-            gt_boxes.data.resize_(data[3].size()).copy_(data[3])
-            num_boxes.data.resize_(data[4].size()).copy_(data[4])
-            need_backprop.data.resize_(data[5].size()).copy_(data[5])
-
-            tgt_im_data.data.resize_(tgt_data[0].size()).copy_(
-                tgt_data[0]
-            )  # change holder size
-            tgt_im_info.data.resize_(tgt_data[1].size()).copy_(tgt_data[1])
-            tgt_im_cls_lb.data.resize_(data[2].size()).copy_(data[2])
-            tgt_gt_boxes.data.resize_(tgt_data[3].size()).copy_(tgt_data[3])
-            tgt_num_boxes.data.resize_(tgt_data[4].size()).copy_(tgt_data[4])
-            tgt_need_backprop.data.resize_(tgt_data[5].size()).copy_(tgt_data[5])
+                tgt_im_data.resize_(tgt_data[0].size()).copy_(
+                    tgt_data[0]
+                )  # change holder size
+                tgt_im_info.resize_(tgt_data[1].size()).copy_(tgt_data[1])
+                tgt_im_cls_lb.resize_(data[2].size()).copy_(data[2])
+                tgt_gt_boxes.resize_(tgt_data[3].size()).copy_(tgt_data[3])
+                tgt_num_boxes.resize_(tgt_data[4].size()).copy_(tgt_data[4])
+                tgt_need_backprop.resize_(tgt_data[5].size()).copy_(tgt_data[5])
 
             """   faster-rcnn loss + DA loss for source and   DA loss for target    """
             fasterRCNN.zero_grad()
