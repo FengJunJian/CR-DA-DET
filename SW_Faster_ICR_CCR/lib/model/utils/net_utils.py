@@ -88,7 +88,7 @@ def _smooth_l1_loss(
     sigma=1.0,
     dim=[1],
 ):
-
+    #torch.nn.functional.smooth_l1_loss()
     sigma_2 = sigma ** 2
     box_diff = bbox_pred - bbox_targets
     in_box_diff = bbox_inside_weights * box_diff
@@ -241,22 +241,36 @@ def _affine_theta(rois, input_size):
     ).view(-1, 2, 3)
 
     return theta
+# deprecated
+# class GradReverse(Function):
+#     def __init__(self, lambd):
+#         self.lambd = lambd
+#
+#
+#     def forward(self, x):
+#         return x.view_as(x)
+#
+#
+#     def backward(self, grad_output):
+#         # pdb.set_trace()
+#         return grad_output * -self.lambd
 
 
 class GradReverse(Function):
-    def __init__(self, lambd):
-        self.lambd = lambd
+    # def __init__(self, lambd):
+    #     self.lambd = lambd
+    @staticmethod
+    def forward(ctx,input,weight):
+        ctx.weight=weight
+        return input.view_as(input)
 
-    def forward(self, x):
-        return x.view_as(x)
-
-    def backward(self, grad_output):
-        # pdb.set_trace()
-        return grad_output * -self.lambd
-
+    @staticmethod
+    def backward(ctx, grad_output):
+        grad_input = grad_output.clone()
+        return ctx.weight*grad_input, None
 
 def grad_reverse(x, lambd=1.0):
-    return GradReverse(lambd)(x)
+    return GradReverse.apply(x,lambd)
 
 
 class EFocalLoss(nn.Module):
@@ -342,6 +356,8 @@ class FocalLoss(nn.Module):
         sigmoid=False,
         reduce=True,
     ):
+
+        # torchvision.ops.sigmoid_focal_loss()
         super(FocalLoss, self).__init__()
         if alpha is None:
             self.alpha = Variable(torch.ones(class_num, 1) * 1.0)
@@ -356,7 +372,7 @@ class FocalLoss(nn.Module):
         self.sigmoid = sigmoid
         self.reduce = reduce
 
-    def forward(self, inputs, targets):
+    def forward(self, inputs, targets):#TODO turn to torchvision.ops.sigmoid_focal_loss()
         N = inputs.size(0)
         # print(N)
         C = inputs.size(1)
