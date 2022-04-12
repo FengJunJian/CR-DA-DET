@@ -485,6 +485,10 @@ if __name__ == "__main__":
             da_use_contex=args.da_use_contex,
         )
 
+    elif args.net=="res50": #only resnet50,101,152
+        fasterRCNN = resnet(
+            s_imdb.classes, 50, pretrained=True, class_agnostic=args.class_agnostic
+        )
     else:
         print("network is not defined")
         pdb.set_trace()
@@ -571,12 +575,21 @@ if __name__ == "__main__":
                 data_t = next(data_iter_t)
             # eta = 1.0
             count_iter += 1
+            # with torch.no_grad():
+            #     im_data=data_s[0].cuda()#.size()).copy_(data_s[0])
+            #     im_info=data_s[1].cuda()
+            #     #im_info.resize_(data_s[1].size()).copy_(data_s[1])
+            #     im_cls_lb=data_s[2].cuda()#.size()).copy_(data_s[2])
+            #     gt_boxes=data_s[3].cuda()
+            #     num_boxes=data_s[4].cuda()
             # put source data into variable
-            im_data.data.resize_(data_s[0].size()).copy_(data_s[0])
-            im_info.data.resize_(data_s[1].size()).copy_(data_s[1])
-            im_cls_lb.data.resize_(data_s[2].size()).copy_(data_s[2])
-            gt_boxes.data.resize_(data_s[3].size()).copy_(data_s[3])
-            num_boxes.data.resize_(data_s[4].size()).copy_(data_s[4])
+            with torch.no_grad():
+                im_data.resize_(data_s[0].size()).copy_(data_s[0])
+
+                im_info.resize_(data_s[1].size()).copy_(data_s[1])
+                im_cls_lb.resize_(data_s[2].size()).copy_(data_s[2])
+                gt_boxes.resize_(data_s[3].size()).copy_(data_s[3])
+                num_boxes.resize_(data_s[4].size()).copy_(data_s[4])
 
             fasterRCNN.zero_grad()
             (
@@ -616,12 +629,13 @@ if __name__ == "__main__":
             # local alignment loss
             dloss_s_p = 0.5 * torch.mean(out_d_pixel ** 2)
 
+            with torch.no_grad():
             # put target data into variable
-            im_data.data.resize_(data_t[0].size()).copy_(data_t[0])
-            im_info.data.resize_(data_t[1].size()).copy_(data_t[1])
-            # gt is empty
-            gt_boxes.data.resize_(1, 1, 5).zero_()
-            num_boxes.data.resize_(1).zero_()
+                im_data.resize_(data_t[0].size()).copy_(data_t[0])
+                im_info.resize_(data_t[1].size()).copy_(data_t[1])
+                # gt is empty
+                gt_boxes.resize_(1, 1, 5).zero_()
+                num_boxes.resize_(1).zero_()
             out_d_pixel, out_d, target_ins_da = fasterRCNN(
                 im_data,
                 im_info,
