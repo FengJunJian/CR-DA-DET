@@ -15,19 +15,19 @@ from torch.autograd import Function, Variable
 
 class GRLayer(Function):
     @staticmethod
-    def forward(ctx, input):
-        ctx.alpha = 0.1
+    def forward(ctx, input,alpha):
+        ctx.alpha = alpha
 
         return input.view_as(input)
 
     @staticmethod
     def backward(ctx, grad_outputs):
         output = grad_outputs.neg() * ctx.alpha
-        return output
+        return output,None
 
 
-def grad_reverse(x):
-    return GRLayer.apply(x)
+def grad_reverse(x,weight=0.1):
+    return GRLayer.apply(x,weight)
 
 
 class _ImageDA(nn.Module):
