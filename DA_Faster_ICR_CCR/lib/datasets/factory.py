@@ -114,6 +114,7 @@ for split in ["train", "val", "val1", "val2", "test"]:
     ] = lambda split=split, devkit_path=devkit_path, data_path=data_path: imagenet(
         split, devkit_path, data_path
     )
+# ship coco
 ss_smd_names = ["ship_train_SeaShips_cocostyle","ship_train_SMD_cocostyle","ship_test_SeaShips_cocostyle","ship_test_SMD_cocostyle"]
 for name in ss_smd_names:
     year="2022"
