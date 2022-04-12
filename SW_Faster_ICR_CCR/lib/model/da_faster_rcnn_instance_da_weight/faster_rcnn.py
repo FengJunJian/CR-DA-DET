@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
-from model.da_faster_rcnn_instance_da_weight.DA import _InstanceDA
+from model.da_faster_rcnn_instance_da_weight.DA import _InstanceDA,grad_reverse
 from model.roi_layers import ROIAlign, ROIPool
 from model.rpn.proposal_target_layer_cascade import _ProposalTargetLayer
 from model.rpn.rpn import _RPN
@@ -13,8 +13,9 @@ from model.utils.net_utils import (
     _affine_theta,
     _crop_pool_layer,
     _smooth_l1_loss,
-    grad_reverse,
+    #grad_reverse,
 )
+from torchvision import ops
 from torch.autograd import Variable
 
 
@@ -83,21 +84,21 @@ class _fasterRCNN(nn.Module):
         # feed image data to base model to obtain base feature map
         base_feat1 = self.RCNN_base1(im_data)
         if self.lc:
-            d_pixel, _ = self.netD_pixel(grad_reverse(base_feat1, lambd=eta))
+            d_pixel, _ = self.netD_pixel(grad_reverse(base_feat1, weight=eta))
             # print(d_pixel)
             # if not target:
             if True:
                 _, feat_pixel = self.netD_pixel(base_feat1.detach())
         else:
-            d_pixel = self.netD_pixel(grad_reverse(base_feat1, lambd=eta))
+            d_pixel = self.netD_pixel(grad_reverse(base_feat1, weight=eta))
         base_feat = self.RCNN_base2(base_feat1)
         if self.gc:
-            domain_p, _ = self.netD(grad_reverse(base_feat, lambd=eta))
+            domain_p, _ = self.netD(grad_reverse(base_feat, weight=eta))
             # if target:
             #     return d_pixel,domain_p#, diff
             _, feat = self.netD(base_feat.detach())
         else:
-            domain_p = self.netD(grad_reverse(base_feat, lambd=eta))
+            domain_p = self.netD(grad_reverse(base_feat, weight=eta))
             # if target:
             #     return d_pixel,domain_p#,diff
         # feed base feature map tp RPN to obtain rois
@@ -214,6 +215,7 @@ class _fasterRCNN(nn.Module):
             RCNN_loss_cls = F.cross_entropy(cls_score, rois_label)
 
             # bounding box regression L1 loss
+
             RCNN_loss_bbox = _smooth_l1_loss(
                 bbox_pred, rois_target, rois_inside_ws, rois_outside_ws
             )
@@ -258,4 +260,4 @@ class _fasterRCNN(nn.Module):
 
     def create_architecture(self):
         self._init_modules()
-        self._init_weights()
+        self._init_weights()#rpn init
