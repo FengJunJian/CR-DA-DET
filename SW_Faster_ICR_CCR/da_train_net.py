@@ -266,8 +266,23 @@ if __name__ == "__main__":
 
     print("Called with args:")
     print(args)
+    if args.dataset == "ship_coco":
 
-    if args.dataset == "pascal_voc":
+        print("loading our dataset...........")
+
+        args.s_imdb_name = "ship_train_SeaShips_cocostyle"
+        args.t_imdb_name = "ship_train_SMD_cocostyle"
+        args.s_imdbtest_name = "ship_test_SeaShips_cocostyle"
+        args.t_imdbtest_name = "ship_test_SMD_cocostyle"
+        args.set_cfgs = [
+            "ANCHOR_SCALES",
+            "[4,8,16,32]",
+            "ANCHOR_RATIOS",
+            "[0.5,1,2]",
+            "MAX_NUM_GT_BOXES",
+            "30",
+        ]
+    elif args.dataset == "pascal_voc":
         print("loading our dataset...........")
         args.imdb_name = "voc_2007_train"
         args.imdbval_name = "voc_2007_test"

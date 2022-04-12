@@ -21,7 +21,7 @@ from datasets.rpc_fake import rpc_fake
 from datasets.sim10k_coco import sim10k
 from datasets.vg import vg
 from datasets.water import water
-
+from datasets.SS_SMD_coco import ss_smd
 __sets = {}
 
 
@@ -128,6 +128,12 @@ for split in ["train", "val", "val1", "val2", "test"]:
     ] = lambda split=split, devkit_path=devkit_path, data_path=data_path: imagenet(
         split, devkit_path, data_path
     )
+
+# ship coco
+ss_smd_names = ["ship_train_SeaShips_cocostyle","ship_train_SMD_cocostyle","ship_test_SeaShips_cocostyle","ship_test_SMD_cocostyle"]
+for name in ss_smd_names:
+    year="2022"
+    __sets[name] = lambda split=name, year=year: ss_smd(split, year)
 
 
 def get_imdb(name):
