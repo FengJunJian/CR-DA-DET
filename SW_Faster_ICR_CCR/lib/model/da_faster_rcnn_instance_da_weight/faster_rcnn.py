@@ -169,7 +169,7 @@ class _fasterRCNN(nn.Module):
 
         if target:
             cls_pre_label = cls_prob.argmax(1).detach()
-            cls_feat_sig = F.sigmoid(cls_feat[0]).detach()
+            cls_feat_sig = torch.sigmoid(cls_feat[0]).detach()
             target_weight = []
             for i in range(len(cls_pre_label)):
                 label_i = cls_pre_label[i].item()

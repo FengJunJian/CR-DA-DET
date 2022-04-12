@@ -377,7 +377,7 @@ class FocalLoss(nn.Module):
         # print(N)
         C = inputs.size(1)
         if self.sigmoid:
-            P = F.sigmoid(inputs)
+            P = torch.sigmoid(inputs)
             # F.softmax(inputs)
             if targets == 0:
                 probs = 1 - P  # (P * class_mask).sum(1).view(-1, 1)
@@ -390,6 +390,7 @@ class FocalLoss(nn.Module):
         else:
             # inputs = F.sigmoid(inputs)
             P = F.softmax(inputs)
+            #P=torch.softmax(inputs,dim=-1)
 
             class_mask = inputs.data.new(N, C).fill_(0)
             class_mask = Variable(class_mask)

@@ -35,7 +35,7 @@ from roi_da_data_layer.roibatchLoader import roibatchLoader
 from roi_da_data_layer.roidb import combined_roidb
 from torch.autograd import Variable
 from torch.utils.data.sampler import Sampler
-
+from tensorboardX import SummaryWriter
 print(sys.path)
 
 
@@ -270,8 +270,10 @@ if __name__ == "__main__":
 
         print("loading our dataset...........")
 
-        args.s_imdb_name = "ship_train_SeaShips_cocostyle"
-        args.t_imdb_name = "ship_train_SMD_cocostyle"
+        # args.s_imdb_name = "ship_train_SeaShips_cocostyle"
+        # args.t_imdb_name = "ship_train_SMD_cocostyle"
+        args.s_imdb_name = "ship_train_SeaShips10_cocostyle"
+        args.t_imdb_name = "ship_train_SMD10_cocostyle"
         args.s_imdbtest_name = "ship_test_SeaShips_cocostyle"
         args.t_imdbtest_name = "ship_test_SMD_cocostyle"
         args.set_cfgs = [
@@ -550,6 +552,10 @@ if __name__ == "__main__":
     else:
         FL = FocalLoss(class_num=2, gamma=args.gamma)
 
+    OUTPUT_DIR=get_output_dir(imname=s_imdb.name, weights_filename="test")
+    print("OUTPUT_DIR:",OUTPUT_DIR)
+    writerT = SummaryWriter(os.path.join(OUTPUT_DIR))
+    summarydict=dict()
     count_iter = 0
     for epoch in range(args.start_epoch, args.max_epochs + 1):
         # setting to train mode
@@ -575,52 +581,55 @@ if __name__ == "__main__":
                 data_t = next(data_iter_t)
             # eta = 1.0
             count_iter += 1
-            # with torch.no_grad():
-            #     im_data=data_s[0].cuda()#.size()).copy_(data_s[0])
-            #     im_info=data_s[1].cuda()
-            #     #im_info.resize_(data_s[1].size()).copy_(data_s[1])
-            #     im_cls_lb=data_s[2].cuda()#.size()).copy_(data_s[2])
-            #     gt_boxes=data_s[3].cuda()
-            #     num_boxes=data_s[4].cuda()
-            # put source data into variable
             with torch.no_grad():
-                im_data.resize_(data_s[0].size()).copy_(data_s[0])
-
-                im_info.resize_(data_s[1].size()).copy_(data_s[1])
-                im_cls_lb.resize_(data_s[2].size()).copy_(data_s[2])
-                gt_boxes.resize_(data_s[3].size()).copy_(data_s[3])
-                num_boxes.resize_(data_s[4].size()).copy_(data_s[4])
-
-            fasterRCNN.zero_grad()
-            (
-                rois,
-                cls_prob,
-                bbox_pred,
-                category_loss_cls,
-                rpn_loss_cls,
-                rpn_loss_box,
-                RCNN_loss_cls,
-                RCNN_loss_bbox,
-                rois_label,
-                out_d_pixel,
-                out_d,
-                source_ins_da,
-            ) = fasterRCNN(
-                im_data,
-                im_info,
-                im_cls_lb,
-                gt_boxes,
-                num_boxes,
-                weight_value=args.da_weight,
-            )
-            loss = (
-                category_loss_cls.mean()
-                + rpn_loss_cls.mean()
-                + rpn_loss_box.mean()
-                + RCNN_loss_cls.mean()
-                + RCNN_loss_bbox.mean()
-            )
-            loss_temp += loss.item()
+                im_data=data_s[0].cuda()#.size()).copy_(data_s[0])
+                im_info=data_s[1].cuda()
+                im_cls_lb=data_s[2].cuda()#.size()).copy_(data_s[2])
+                gt_boxes=data_s[3].cuda()
+                num_boxes=data_s[4].cuda()
+            # put source data into variable
+            # with torch.no_grad():
+            #     im_data.resize_(data_s[0].size()).copy_(data_s[0])
+            #
+            #     im_info.resize_(data_s[1].size()).copy_(data_s[1])
+            #     im_cls_lb.resize_(data_s[2].size()).copy_(data_s[2])
+            #     gt_boxes.resize_(data_s[3].size()).copy_(data_s[3])
+            #     num_boxes.resize_(data_s[4].size()).copy_(data_s[4])
+            try:
+                fasterRCNN.zero_grad()
+                (
+                    rois,
+                    cls_prob,
+                    bbox_pred,
+                    category_loss_cls,
+                    rpn_loss_cls,
+                    rpn_loss_box,
+                    RCNN_loss_cls,
+                    RCNN_loss_bbox,
+                    rois_label,
+                    out_d_pixel,
+                    out_d,
+                    source_ins_da,
+                ) = fasterRCNN(
+                    im_data,
+                    im_info,
+                    im_cls_lb,
+                    gt_boxes,
+                    num_boxes,
+                    weight_value=args.da_weight,
+                )
+                loss = (
+                    category_loss_cls.mean()
+                    + rpn_loss_cls.mean()
+                    + rpn_loss_box.mean()
+                    + RCNN_loss_cls.mean()
+                    + RCNN_loss_bbox.mean()
+                )
+                loss_temp += loss.item()
+            except ValueError as e:
+                print('source domain:',e)
+                continue
+                #print()
 
             # domain label
             domain_s = Variable(torch.zeros(out_d.size(0)).long().cuda())
@@ -636,15 +645,19 @@ if __name__ == "__main__":
                 # gt is empty
                 gt_boxes.resize_(1, 1, 5).zero_()
                 num_boxes.resize_(1).zero_()
-            out_d_pixel, out_d, target_ins_da = fasterRCNN(
-                im_data,
-                im_info,
-                im_cls_lb,
-                gt_boxes,
-                num_boxes,
-                target=True,
-                weight_value=args.da_weight,
-            )
+            try:
+                out_d_pixel, out_d, target_ins_da = fasterRCNN(
+                    im_data,
+                    im_info,
+                    im_cls_lb,
+                    gt_boxes,
+                    num_boxes,
+                    target=True,
+                    weight_value=args.da_weight,
+                )
+            except ValueError as e:
+                print('target domain:',e)
+                continue
             # domain label
             domain_t = Variable(torch.ones(out_d.size(0)).long().cuda())
             dloss_t = 0.5 * FL(out_d, domain_t)
@@ -665,7 +678,6 @@ if __name__ == "__main__":
                 end = time.time()
                 if step > 0:
                     loss_temp /= args.disp_interval + 1
-
                 source_ins_da_loss = source_ins_da.item() * args.instance_da_eta
                 target_ins_da_loss = target_ins_da.item() * args.instance_da_eta
 
@@ -680,7 +692,27 @@ if __name__ == "__main__":
                 dloss_t_p = dloss_t_p.item()
                 fg_cnt = torch.sum(rois_label.data.ne(0))
                 bg_cnt = rois_label.data.numel() - fg_cnt
+                SummaryIter=iters_per_epoch*epoch+step
+                # from copy import copy
+                summarydict['loss_category_cls'] = loss_category_cls
+                summarydict['loss_rpn_cls'] = loss_rpn_cls
+                summarydict['loss_rpn_box'] = loss_rpn_box
+                summarydict['loss_rcnn_cls'] = loss_rcnn_cls
+                summarydict['loss_rcnn_box'] = loss_rcnn_box
+                summarydict['dloss_s'] = dloss_s
+                summarydict['dloss_t'] = dloss_t
+                summarydict['dloss_s_p'] = dloss_s_p
+                summarydict['dloss_t_p'] = dloss_t_p
+                summarydict['eta'] = args.eta
+                summarydict['source_ins_da_loss'] = source_ins_da_loss
+                summarydict['target_ins_da_loss'] = target_ins_da_loss
 
+                summarydict['loss_temp'] = loss_temp
+                summarydict['lr'] = lr
+                summarydict['fg/bg'] = 1.0 * (fg_cnt / bg_cnt).cpu().numpy()
+                for k,v in summarydict.items():
+                    writerT.add_scalar(tag=k,scalar_value=v,global_step=SummaryIter)
+                writerT.flush()
                 print(
                     "[session %d][epoch %2d][iter %4d/%4d] loss: %.4f, lr: %.2e"
                     % (args.session, epoch, step, iters_per_epoch, loss_temp, lr)

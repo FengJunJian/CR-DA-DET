@@ -57,11 +57,13 @@ class _ProposalTargetLayer(nn.Module):
 
         return rois, labels, bbox_targets, bbox_inside_weights, bbox_outside_weights
 
-    def backward(self, top, propagate_down, bottom):
-        """This layer does not propagate gradients."""
-
-    def reshape(self, bottom, top):
-        """Reshaping happens during the call to forward."""
+    # def backward(self, top, propagate_down, bottom):
+    #     """This layer does not propagate gradients."""
+    #     pass
+    #
+    # def reshape(self, bottom, top):
+    #     """Reshaping happens during the call to forward."""
+    #     pass
 
     def _get_bbox_regression_labels_pytorch(
         self, bbox_target_data, labels_batch, num_classes
@@ -203,8 +205,13 @@ class _ProposalTargetLayer(nn.Module):
                 bg_rois_per_this_image = rois_per_image
                 fg_rois_per_this_image = 0
             else:
+                print(max_overlaps)
+                other_inds = torch.nonzero(max_overlaps[i] < cfg.TRAIN.BG_THRESH_LO).view(-1)
+                other_num_rois = other_inds.numel()
+                print(other_num_rois)
+
                 raise ValueError(
-                    "bg_num_rois = 0 and fg_num_rois = 0, this should not happen!"
+                    "bg_num_rois = 0 and fg_num_rois = 0, this should not happen! and the number of rois whose threshold lower than BG_THRESH_LO has {}".format(other_num_rois)
                 )
 
             # The indices that we're selecting (both fg and bg)

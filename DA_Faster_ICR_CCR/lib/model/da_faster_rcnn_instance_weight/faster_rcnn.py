@@ -174,7 +174,7 @@ class _fasterRCNN(nn.Module):
         tgt_image_cls_feat = (
             self.conv_lst(self.avg_pool(tgt_base_feat)).squeeze(-1).squeeze(-1).detach()
         )
-        tgt_image_cls_feat = F.sigmoid(tgt_image_cls_feat[0]).detach()
+        tgt_image_cls_feat = torch.sigmoid(tgt_image_cls_feat[0]).detach()
 
         # feed base feature map tp RPN to obtain rois
         self.RCNN_rpn.eval()

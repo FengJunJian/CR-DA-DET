@@ -130,7 +130,12 @@ for split in ["train", "val", "val1", "val2", "test"]:
     )
 
 # ship coco
-ss_smd_names = ["ship_train_SeaShips_cocostyle","ship_train_SMD_cocostyle","ship_test_SeaShips_cocostyle","ship_test_SMD_cocostyle"]
+ss_smd_names = ["ship_train_SeaShips_cocostyle",
+                "ship_train_SMD_cocostyle",
+                "ship_test_SeaShips_cocostyle",
+                "ship_test_SMD_cocostyle",
+                "ship_train_SeaShips10_cocostyle",
+                "ship_train_SMD10_cocostyle",]
 for name in ss_smd_names:
     year="2022"
     __sets[name] = lambda split=name, year=year: ss_smd(split, year)

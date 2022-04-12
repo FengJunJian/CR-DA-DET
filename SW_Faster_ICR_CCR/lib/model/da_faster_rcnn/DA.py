@@ -65,6 +65,6 @@ class _InstanceDA(nn.Module):
         x = grad_reverse(x)
         x = self.dc_drop1(self.dc_relu1(self.dc_ip1(x)))
         x = self.dc_drop2(self.dc_relu2(self.dc_ip2(x)))
-        x = F.sigmoid(self.clssifer(x))
+        x = torch.sigmoid(self.clssifer(x))
         label = self.LabelResizeLayer(x, need_backprop)
         return x, label
