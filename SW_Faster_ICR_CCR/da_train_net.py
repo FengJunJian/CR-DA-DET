@@ -113,9 +113,9 @@ def parse_args():
     parser.add_argument(
         "--o", dest="optimizer", help="training optimizer", default="sgd", type=str
     )
-    parser.add_argument(
-        "--lr", dest="lr", help="starting learning rate", default=0.001, type=float
-    )
+    # parser.add_argument(
+    #     "--lr", dest="lr", help="starting learning rate", default=0.001, type=float
+    # )
     parser.add_argument(
         "--lr_decay_step",
         dest="lr_decay_step",
@@ -270,15 +270,15 @@ if __name__ == "__main__":
 
         print("loading our dataset...........")
 
-        # args.s_imdb_name = "ship_train_SeaShips_cocostyle"
-        # args.t_imdb_name = "ship_train_SMD_cocostyle"
-        args.s_imdb_name = "ship_train_SeaShips10_cocostyle"
-        args.t_imdb_name = "ship_train_SMD10_cocostyle"
+        args.s_imdb_name = "ship_train_SeaShips_cocostyle"
+        args.t_imdb_name = "ship_train_SMD_cocostyle"
+        # args.s_imdb_name = "ship_train_SeaShips10_cocostyle"
+        # args.t_imdb_name = "ship_train_SMD10_cocostyle"
         args.s_imdbtest_name = "ship_test_SeaShips_cocostyle"
         args.t_imdbtest_name = "ship_test_SMD_cocostyle"
         args.set_cfgs = [
             "ANCHOR_SCALES",
-            "[4,8,16,32]",
+            "[32,64,128,256,512]",
             "ANCHOR_RATIOS",
             "[0.5,1,2]",
             "MAX_NUM_GT_BOXES",
@@ -419,7 +419,8 @@ if __name__ == "__main__":
         args.batch_size,
         s_imdb.num_classes,
         training=True,
-    )
+        is_source=True
+    )#data, im_info,   cls_lb,    gt_boxes,    num_boxes,    need_backprop,    filenames
 
     dataloader_s = torch.utils.data.DataLoader(
         dataset_s,
@@ -434,6 +435,7 @@ if __name__ == "__main__":
         args.batch_size,
         t_imdb.num_classes,
         training=True,
+        is_source=False
     )
     dataloader_t = torch.utils.data.DataLoader(
         dataset_t,
@@ -498,7 +500,7 @@ if __name__ == "__main__":
     fasterRCNN.create_architecture()
 
     lr = cfg.TRAIN.LEARNING_RATE
-    lr = args.lr
+    #lr = args.lr
 
     params = []
     for key, value in dict(fasterRCNN.named_parameters()).items():
@@ -552,9 +554,9 @@ if __name__ == "__main__":
     else:
         FL = FocalLoss(class_num=2, gamma=args.gamma)
 
-    OUTPUT_DIR=get_output_dir(imname=s_imdb.name, weights_filename="test")
-    print("OUTPUT_DIR:",OUTPUT_DIR)
-    writerT = SummaryWriter(os.path.join(OUTPUT_DIR))
+    #OUTPUT_DIR=get_output_dir(imname=s_imdb.name, weights_filename="test")
+    print("OUTPUT_DIR:",output_dir)
+    writerT = SummaryWriter(os.path.join(output_dir,'even'))
     summarydict=dict()
     count_iter = 0
     for epoch in range(args.start_epoch, args.max_epochs + 1):
@@ -628,6 +630,7 @@ if __name__ == "__main__":
                 loss_temp += loss.item()
             except ValueError as e:
                 print('source domain:',e)
+                print('data_s:',data_s[6])
                 continue
                 #print()
 
@@ -657,6 +660,7 @@ if __name__ == "__main__":
                 )
             except ValueError as e:
                 print('target domain:',e)
+                print('data_t:', data_t[6])
                 continue
             # domain label
             domain_t = Variable(torch.ones(out_d.size(0)).long().cuda())
@@ -707,12 +711,12 @@ if __name__ == "__main__":
                 summarydict['source_ins_da_loss'] = source_ins_da_loss
                 summarydict['target_ins_da_loss'] = target_ins_da_loss
 
-                summarydict['loss_temp'] = loss_temp
+                summarydict['loss'] = loss_temp
                 summarydict['lr'] = lr
-                summarydict['fg/bg'] = 1.0 * (fg_cnt / bg_cnt).cpu().numpy()
+                summarydict['fg-bg'] = 1.0 * (fg_cnt / bg_cnt).cpu().numpy()
                 for k,v in summarydict.items():
                     writerT.add_scalar(tag=k,scalar_value=v,global_step=SummaryIter)
-                writerT.flush()
+                    writerT.flush()
                 print(
                     "[session %d][epoch %2d][iter %4d/%4d] loss: %.4f, lr: %.2e"
                     % (args.session, epoch, step, iters_per_epoch, loss_temp, lr)
