@@ -197,6 +197,7 @@ class ss_smd(imdb):
             "gt_overlaps": overlaps,
             "flipped": False,
             "seg_areas": seg_areas,
+            #"file_name":im_ann["file_name"]
         }
 
     def _get_widths(self):
@@ -220,6 +221,7 @@ class ss_smd(imdb):
                 "gt_overlaps": self.roidb[i]["gt_overlaps"],
                 "flipped": True,
                 "seg_areas": self.roidb[i]["seg_areas"],
+               # "file_name":self.roidb[i]["file_name"]
             }
 
             self.roidb.append(entry)
