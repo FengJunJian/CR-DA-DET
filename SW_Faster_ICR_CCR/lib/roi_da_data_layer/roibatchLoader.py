@@ -22,6 +22,7 @@ class roibatchLoader(data.Dataset):
         num_classes,
         training=True,
         normalize=None,
+        is_source=True,
     ):
         self._roidb = roidb
         self._num_classes = num_classes
@@ -35,7 +36,7 @@ class roibatchLoader(data.Dataset):
         self.ratio_index = ratio_index
         self.batch_size = batch_size
         self.data_size = len(self.ratio_list)
-
+        self.is_source=is_source
         # given the ratio_list, we want to make the ratio same for each batch.
         self.ratio_list_batch = torch.Tensor(self.data_size).zero_()
 
@@ -69,9 +70,14 @@ class roibatchLoader(data.Dataset):
         # sample in this group
         minibatch_db = [self._roidb[index_ratio]]
         blobs = get_minibatch(minibatch_db, self._num_classes)
+        if not self.is_source:  # target domain
+            blobs["need_backprop"] = np.zeros((1,), dtype=np.float32)
+        else:
+            blobs["need_backprop"] = np.ones((1,), dtype=np.float32)
         data = torch.from_numpy(blobs["data"])
         im_info = torch.from_numpy(blobs["im_info"])
         cls_lb = torch.from_numpy(blobs["cls_lb"])
+        filenames=blobs['filename']
         # we need to random shuffle the bounding box.
         data_height, data_width = data.size(1), data.size(2)
         if self.training:
@@ -224,6 +230,7 @@ class roibatchLoader(data.Dataset):
                 gt_boxes_padding,
                 num_boxes,
                 need_backprop,
+                filenames
             )
 
         else:
@@ -237,7 +244,7 @@ class roibatchLoader(data.Dataset):
             num_boxes = 0
             need_backprop = 0
 
-            return data, im_info, cls_lb, gt_boxes, num_boxes, need_backprop
+            return data, im_info, cls_lb, gt_boxes, num_boxes, need_backprop,filenames
 
     def __len__(self):
         return len(self._roidb)
