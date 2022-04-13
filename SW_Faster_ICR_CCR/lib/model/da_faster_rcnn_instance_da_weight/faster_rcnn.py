@@ -77,28 +77,28 @@ class _fasterRCNN(nn.Module):
 
         batch_size = im_data.size(0)
 
-        im_info = im_info.data
-        gt_boxes = gt_boxes.data
-        num_boxes = num_boxes.data
+        # im_info = im_info.data
+        # gt_boxes = gt_boxes.data
+        # num_boxes = num_boxes.data
 
         # feed image data to base model to obtain base feature map
-        base_feat1 = self.RCNN_base1(im_data)
+        base_feat1 = self.RCNN_base1(im_data)#(600,1067)->(150,267)
         if self.lc:
-            d_pixel, _ = self.netD_pixel(grad_reverse(base_feat1, weight=eta))
+            d_pixel, _ = self.netD_pixel(grad_reverse(base_feat1, weight=eta))#局部特征对齐
             # print(d_pixel)
             # if not target:
-            if True:
-                _, feat_pixel = self.netD_pixel(base_feat1.detach())
+            #if True:
+            _, feat_pixel = self.netD_pixel(base_feat1.detach())
         else:
-            d_pixel = self.netD_pixel(grad_reverse(base_feat1, weight=eta))
-        base_feat = self.RCNN_base2(base_feat1)
+            d_pixel = self.netD_pixel(grad_reverse(base_feat1, weight=eta))#局部特征对齐
+        base_feat = self.RCNN_base2(base_feat1)#(150,267)->(38,67)
         if self.gc:
-            domain_p, _ = self.netD(grad_reverse(base_feat, weight=eta))
+            domain_p, _ = self.netD(grad_reverse(base_feat, weight=eta))#全局特征对齐
             # if target:
             #     return d_pixel,domain_p#, diff
             _, feat = self.netD(base_feat.detach())
         else:
-            domain_p = self.netD(grad_reverse(base_feat, weight=eta))
+            domain_p = self.netD(grad_reverse(base_feat, weight=eta))#全局特征对齐
             # if target:
             #     return d_pixel,domain_p#,diff
         # feed base feature map tp RPN to obtain rois
@@ -109,7 +109,7 @@ class _fasterRCNN(nn.Module):
         cls_feat = self.avg_pool(base_feat)
         cls_feat = self.conv_lst(cls_feat).squeeze(-1).squeeze(-1)
         # cls_feat = self.conv_lst(self.bn1(self.avg_pool(base_feat))).squeeze(-1).squeeze(-1)
-        category_loss_cls = nn.BCEWithLogitsLoss()(cls_feat, im_cls_lb)
+        category_loss_cls = nn.BCEWithLogitsLoss()(cls_feat, im_cls_lb)#Image-level categorical regularization
 
         # if it is training phrase, then use ground trubut bboxes for refining
         if self.training:
