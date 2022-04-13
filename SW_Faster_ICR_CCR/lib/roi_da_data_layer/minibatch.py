@@ -28,15 +28,17 @@ def get_minibatch(roidb, num_classes):
     )
 
     # Get the input image blob, formatted for caffe
-    im_blob, im_scales = _get_image_blob(roidb, random_scale_inds)
+    im_blob, im_scales,im_names = _get_image_blob(roidb, random_scale_inds)
 
-    blobs = {"data": im_blob}
+    blobs = {"data": im_blob,"filename":im_names}
 
-    im_name = roidb[0]["image"]
-    if im_name.find("source_") == -1:  # target domain
-        blobs["need_backprop"] = np.zeros((1,), dtype=np.float32)
-    else:
-        blobs["need_backprop"] = np.ones((1,), dtype=np.float32)
+    # im_name = roidb[0]["image"]
+    #is_source = roidb[0]["is_source"]
+    # if im_name.find("source_") == -1:  # target domain
+    # if not is_source:# target domain
+    #     blobs["need_backprop"] = np.zeros((1,), dtype=np.float32)
+    # else:
+    #     blobs["need_backprop"] = np.ones((1,), dtype=np.float32)
 
     assert len(im_scales) == 1, "Single batch only"
     assert len(roidb) == 1, "Single batch only"
@@ -80,8 +82,11 @@ def _get_image_blob(roidb, scale_inds):
     num_images = len(roidb)
     processed_ims = []
     im_scales = []
+    im_names=[]
     for i in range(num_images):
+
         im = cv2.imread(roidb[i]["image"])
+        im_names.append(roidb[i]["image"])
         # cv2.imwrite('S_2793.jpg', im)
         # im = imread(roidb[i]["image"])
         if len(im.shape) == 2:
@@ -103,4 +108,4 @@ def _get_image_blob(roidb, scale_inds):
     # Create a blob to hold the input images
     blob = im_list_to_blob(processed_ims)
 
-    return blob, im_scales
+    return blob, im_scales,im_names
