@@ -371,6 +371,10 @@ class resnet(_fasterRCNN):
             self.RCNN_bbox_pred = nn.Linear(feat_d, 4)
         else:
             self.RCNN_bbox_pred = nn.Linear(feat_d, 4 * self.n_classes)
+        # Init rcnn branch
+        for l in [self.RCNN_cls_score, self.RCNN_bbox_pred]:#***Init*** Important
+            torch.nn.init.normal_(l.weight, std=0.01)
+            torch.nn.init.constant_(l.bias, 0)
 
         # Fix blocks
         for p in self.RCNN_base1[0].parameters():
