@@ -51,7 +51,7 @@ class _ProposalLayer(nn.Module):
         #     top[1].reshape(1, 1, 1, 1)
 
     def forward(self, input):
-
+        #input:(rpn_cls_prob, rpn_bbox_pred, im_info, cfg_key)
         # Algorithm:
         #
         # for each (H, W) location i
@@ -95,7 +95,7 @@ class _ProposalLayer(nn.Module):
 
         self._anchors = self._anchors.type_as(scores)
         # anchors = self._anchors.view(1, A, 4) + shifts.view(1, K, 4).permute(1, 0, 2).contiguous()
-        anchors = self._anchors.view(1, A, 4) + shifts.view(K, 1, 4)
+        anchors = self._anchors.view(1, A, 4) + shifts.view(K, 1, 4)#broadcast
         anchors = anchors.view(1, K * A, 4).expand(batch_size, K * A, 4)
 
         # Transpose and reshape predicted bbox transformations to get them
