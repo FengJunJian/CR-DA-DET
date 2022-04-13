@@ -306,8 +306,9 @@ class EFocalLoss(nn.Module):
         # print(N)
         C = inputs.size(1)
         # inputs = F.sigmoid(inputs)
-        P = F.softmax(inputs)
-        class_mask = inputs.data.new(N, C).fill_(0)
+        #P = F.softmax(inputs)
+        P=torch.softmax(inputs,dim=-1)#TODO test
+        class_mask = inputs.new(N, C).fill_(0)
         class_mask = Variable(class_mask)
         ids = targets.view(-1, 1)
         class_mask.scatter_(1, ids.data, 1.0)
@@ -389,18 +390,18 @@ class FocalLoss(nn.Module):
                 batch_loss = -(torch.pow((1 - probs), self.gamma)) * log_p
         else:
             # inputs = F.sigmoid(inputs)
-            P = F.softmax(inputs)
-            #P=torch.softmax(inputs,dim=-1)
+            #P = F.softmax(inputs)
+            P=torch.softmax(inputs,dim=-1)
 
-            class_mask = inputs.data.new(N, C).fill_(0)
+            class_mask = inputs.new(N, C).fill_(0)
             class_mask = Variable(class_mask)
             ids = targets.view(-1, 1)
-            class_mask.scatter_(1, ids.data, 1.0)
+            class_mask.scatter_(1, ids, 1.0)
             # print(class_mask)
 
             if inputs.is_cuda and not self.alpha.is_cuda:
                 self.alpha = self.alpha.cuda()
-            alpha = self.alpha[ids.data.view(-1)]
+            alpha = self.alpha[ids.view(-1)]
 
             probs = (P * class_mask).sum(1).view(-1, 1)
 
