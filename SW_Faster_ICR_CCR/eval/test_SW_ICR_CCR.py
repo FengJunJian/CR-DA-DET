@@ -52,13 +52,13 @@ def parse_args():
     parser.add_argument(
         "--output_dir", dest="output_dir", help="resoutput", default="./", type=str,
     )
-    parser.add_argument(
-        "--cfg",
-        dest="cfg_file",
-        help="optional config file",
-        default="cfgs/vgg16.yml",
-        type=str,
-    )
+    # parser.add_argument(
+    #     "--cfg",
+    #     dest="cfg_file",
+    #     help="optional config file",
+    #     default="cfgs/vgg16.yml",
+    #     type=str,
+    # )
     parser.add_argument(
         "--net",
         dest="net",
@@ -193,7 +193,22 @@ if __name__ == "__main__":
         print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
     np.random.seed(cfg.RNG_SEED)
-    if args.dataset == "pascal_voc":
+    if args.dataset == "ship_coco":
+
+        print("loading our dataset...........")
+        args.s_imdb_name = "ship_train_SeaShips_cocostyle"
+        args.t_imdb_name = "ship_train_SMD_cocostyle"
+        args.s_imdbtest_name = "ship_test_SeaShips_cocostyle"
+        args.t_imdbtest_name = "ship_test_SMD_cocostyle"
+        args.set_cfgs = [
+            "ANCHOR_SCALES",
+            "[32,64,128,256,512]",
+            "ANCHOR_RATIOS",
+            "[0.5,1,2]",
+            "MAX_NUM_GT_BOXES",
+            "30",
+        ]
+    elif args.dataset == "pascal_voc":
         args.imdb_name = "voc_2007_trainval"
         args.imdbval_name = "voc_2007_test"
         args.set_cfgs = ["ANCHOR_SCALES", "[4,8, 16, 32]", "ANCHOR_RATIOS", "[0.5,1,2]"]
@@ -430,7 +445,7 @@ if __name__ == "__main__":
     num_images = len(imdb.image_index)
     all_boxes = [[[] for _ in range(num_images)] for _ in range(imdb.num_classes)]
 
-    output_dir = get_output_dir(imdb, save_name)
+    output_dir = get_output_dir(imdb.name, save_name)
     dataset = roibatchLoader(
         roidb,
         ratio_list,

@@ -405,7 +405,7 @@ if __name__ == "__main__":
     print("source {:d} target {:d} roidb entries".format(len(s_roidb), len(t_roidb)))
 
     # output_dir = args.save_dir + "/" + args.net + "/" + args.dataset
-    output_dir = args.save_dir
+    output_dir = get_output_dir(s_imdb.name+'To'+t_imdb.name)#args.save_dir
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
