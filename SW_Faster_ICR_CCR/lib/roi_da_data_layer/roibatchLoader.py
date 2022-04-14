@@ -70,9 +70,9 @@ class roibatchLoader(data.Dataset):
         # sample in this group
         minibatch_db = [self._roidb[index_ratio]]
         blobs = get_minibatch(minibatch_db, self._num_classes)
-        if not self.is_source:  # target domain
+        if self.is_source:  # source domain
             blobs["need_backprop"] = np.zeros((1,), dtype=np.float32)
-        else:
+        else:#target domain
             blobs["need_backprop"] = np.ones((1,), dtype=np.float32)
         data = torch.from_numpy(blobs["data"])
         im_info = torch.from_numpy(blobs["im_info"])

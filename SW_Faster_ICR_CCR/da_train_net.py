@@ -80,7 +80,7 @@ def parse_args():
         "--nw",
         dest="num_workers",
         help="number of worker to load data",
-        default=0,
+        default=5,
         type=int,
     )
     parser.add_argument(
@@ -634,7 +634,7 @@ if __name__ == "__main__":
                 continue
                 #print()
 
-            # domain label
+            #source domain label
             domain_s = Variable(torch.zeros(out_d.size(0)).long().cuda())
             # global alignment loss
             dloss_s = 0.5 * FL(out_d, domain_s)
@@ -662,7 +662,7 @@ if __name__ == "__main__":
                 print('target domain:',e)
                 print('data_t:', data_t[6])
                 continue
-            # domain label
+            #target domain label
             domain_t = Variable(torch.ones(out_d.size(0)).long().cuda())
             dloss_t = 0.5 * FL(out_d, domain_t)
             # local alignment loss
@@ -672,7 +672,7 @@ if __name__ == "__main__":
             else:
                 loss += dloss_s + dloss_t + dloss_s_p + dloss_t_p
 
-            loss += (source_ins_da + target_ins_da) * args.instance_da_eta
+            loss += (source_ins_da + target_ins_da) * args.instance_da_eta #categorical consistency regularization
 
             optimizer.zero_grad()
             loss.backward()

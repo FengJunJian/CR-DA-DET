@@ -160,14 +160,15 @@ class _fasterRCNN(nn.Module):
 
         # compute object classification probability
         cls_score = self.RCNN_cls_score(pooled_feat)
-        cls_prob = F.softmax(cls_score, 1)
+        #cls_prob = F.softmax(cls_score, 1)
+        cls_prob = torch.softmax(cls_score, 1)
 
         # add instance da
         instance_sigmoid, same_size_label = self.RCNN_instanceDA(
             instance_pooled_feat, need_backprop
         )
 
-        if target:
+        if target: #compute categorical consistency regularization (CCR)
             cls_pre_label = cls_prob.argmax(1).detach()
             cls_feat_sig = torch.sigmoid(cls_feat[0]).detach()
             target_weight = []

@@ -88,7 +88,8 @@ def _smooth_l1_loss(
     sigma=1.0,
     dim=[1],
 ):
-    #torch.nn.functional.smooth_l1_loss()
+
+    #TODO torch.nn.functional.smooth_l1_loss()
     sigma_2 = sigma ** 2
     box_diff = bbox_pred - bbox_targets
     in_box_diff = bbox_inside_weights * box_diff

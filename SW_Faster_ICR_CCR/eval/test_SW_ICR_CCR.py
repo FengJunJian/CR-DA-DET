@@ -27,11 +27,11 @@ from model.utils.net_utils import load_net, save_net, vis_detections
 from roi_da_data_layer.roibatchLoader import roibatchLoader
 from roi_da_data_layer.roidb import combined_roidb
 from torch.autograd import Variable
-
-try:
-    xrange  # Python 2
-except NameError:
-    xrange = range  # Python 3
+from torch.utils.data import DataLoader
+# try:
+#     xrange  # Python 2
+# except NameError:
+#     xrange = range  # Python 3
 
 
 def parse_args():
@@ -428,7 +428,7 @@ if __name__ == "__main__":
 
     save_name = args.part + args.model_dir.split("/")[-1]
     num_images = len(imdb.image_index)
-    all_boxes = [[[] for _ in xrange(num_images)] for _ in xrange(imdb.num_classes)]
+    all_boxes = [[[] for _ in range(num_images)] for _ in range(imdb.num_classes)]
 
     output_dir = get_output_dir(imdb, save_name)
     dataset = roibatchLoader(
@@ -440,8 +440,8 @@ if __name__ == "__main__":
         training=False,
         normalize=False,
     )
-    dataloader = torch.utils.data.DataLoader(
-        dataset, batch_size=1, shuffle=False, num_workers=0, pin_memory=True
+    dataloader = DataLoader(
+        dataset, batch_size=1, shuffle=False, num_workers=10, pin_memory=True
     )
 
     data_iter = iter(dataloader)
@@ -454,11 +454,11 @@ if __name__ == "__main__":
     for i in range(num_images):
 
         data = next(data_iter)
-        im_data.data.resize_(data[0].size()).copy_(data[0])
-        im_info.data.resize_(data[1].size()).copy_(data[1])
-        im_cls_lb.data.resize_(data[2].size()).copy_(data[2])
-        gt_boxes.data.resize_(data[3].size()).copy_(data[3])
-        num_boxes.data.resize_(data[4].size()).copy_(data[4])
+        im_data.resize_(data[0].size()).copy_(data[0])
+        im_info.resize_(data[1].size()).copy_(data[1])
+        im_cls_lb.resize_(data[2].size()).copy_(data[2])
+        gt_boxes.resize_(data[3].size()).copy_(data[3])
+        num_boxes.resize_(data[4].size()).copy_(data[4])
 
         det_tic = time.time()
 
@@ -477,8 +477,8 @@ if __name__ == "__main__":
                 domain_p,
             ) = fasterRCNN(im_data, im_info, im_cls_lb, gt_boxes, num_boxes)
 
-        scores = cls_prob.data
-        boxes = rois.data[:, :, 1:5]
+        scores = cls_prob
+        boxes = rois[:, :, 1:5]
 
         if cfg.TEST.BBOX_REG:
             # Apply bounding-box regression deltas
@@ -516,7 +516,7 @@ if __name__ == "__main__":
         if vis:
             im = cv2.imread(imdb.image_path_at(i))
             im2show = np.copy(im)
-        for j in xrange(1, imdb.num_classes):
+        for j in range(1, imdb.num_classes):
             inds = torch.nonzero(scores[:, j] > thresh).view(-1)
             # if there is det
             if inds.numel() > 0:
@@ -544,11 +544,11 @@ if __name__ == "__main__":
         # Limit to max_per_image detections *over all classes*
         if max_per_image > 0:
             image_scores = np.hstack(
-                [all_boxes[j][i][:, -1] for j in xrange(1, imdb.num_classes)]
+                [all_boxes[j][i][:, -1] for j in range(1, imdb.num_classes)]
             )
             if len(image_scores) > max_per_image:
                 image_thresh = np.sort(image_scores)[-max_per_image]
-                for j in xrange(1, imdb.num_classes):
+                for j in range(1, imdb.num_classes):
                     keep = np.where(all_boxes[j][i][:, -1] >= image_thresh)[0]
                     all_boxes[j][i] = all_boxes[j][i][keep, :]
 
